@@ -27,11 +27,11 @@ export interface IVehicle {
 
 export interface IBooking {
   id:              number;
-  customer_id:     number;
+  user_id:         number;   // ✅ FIXED
   vehicle_id:      number;
   rent_start_date: string;
   rent_end_date:   string;
-  total_price:     number;
+  total_cost:      number;   // ✅ FIXED (match DB)
   status:          BookingStatus;
   created_at?:     Date;
 }
