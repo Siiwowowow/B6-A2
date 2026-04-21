@@ -7,16 +7,22 @@ const PORT = Number(process.env.PORT) || 5000;
 const startServer = async () => {
   try {
     await pool.query('SELECT 1');
-    console.log('✅ Database connected');
+    console.log('✅ DB Connected');
 
-    await autoMarkReturned();
-    console.log('✅ Auto-mark completed');
+    // SAFE AUTO RUN (no crash)
+    try {
+      await autoMarkReturned();
+      console.log('✅ Auto-mark completed');
+    } catch (err) {
+      console.log('⚠️ Auto-mark skipped safely');
+    }
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running: http://localhost:${PORT}`);
+      console.log(`🚀 Server running on ${PORT}`);
     });
-  } catch (err) {
-    console.error('❌ Server failed:', err);
+
+  } catch (error) {
+    console.error('❌ Server failed:', error);
     process.exit(1);
   }
 };

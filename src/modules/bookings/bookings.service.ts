@@ -4,27 +4,43 @@ import { IBooking } from '../../types';
 // ─── Auto-mark returned bookings whose end date has passed ──────────────────
 export const autoMarkReturned = async (): Promise<void> => {
   const client = await pool.connect();
+
   try {
     await client.query('BEGIN');
 
-    // Find all overdue active bookings
-    const overdue = await client.query<{ id: number; vehicle_id: number }>(
-      `SELECT id, vehicle_id FROM bookings
-       WHERE status = 'active' AND rent_end_date < CURRENT_DATE`,
+    // 1. Find overdue active bookings safely
+    const overdue = await client.query(
+      `
+      SELECT id, vehicle_id
+      FROM bookings
+      WHERE status = 'active'
+        AND rent_end_date IS NOT NULL
+        AND rent_end_date < NOW()
+      `
     );
 
     if (overdue.rowCount && overdue.rowCount > 0) {
-      const bookingIds  = overdue.rows.map(r => r.id);
-      const vehicleIds  = overdue.rows.map(r => r.vehicle_id);
+      const bookingIds = overdue.rows.map(r => r.id);
+      const vehicleIds = overdue.rows.map(r => r.vehicle_id);
 
+      // 2. Update bookings
       await client.query(
-        `UPDATE bookings SET status = 'returned' WHERE id = ANY($1::int[])`,
-        [bookingIds],
+        `
+        UPDATE bookings
+        SET status = 'returned'
+        WHERE id = ANY($1::int[])
+        `,
+        [bookingIds]
       );
 
+      // 3. Update vehicles
       await client.query(
-        `UPDATE vehicles SET availability_status = 'available' WHERE id = ANY($1::int[])`,
-        [vehicleIds],
+        `
+        UPDATE vehicles
+        SET availability_status = 'available'
+        WHERE id = ANY($1::int[])
+        `,
+        [vehicleIds]
       );
     }
 
