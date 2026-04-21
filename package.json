@@ -2,7 +2,7 @@
   "name": "B6-A2",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
